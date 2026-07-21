@@ -97,6 +97,7 @@ private:
     };
 
 #if AP_RANGEFINDER_ENABLED
+    AP_SurfaceDistance::SurfDistParameters _ground_surface_params;
     AP_SurfaceDistance* _ground_surface;
 #endif
     uint32_t _last_gnd_surf_update;

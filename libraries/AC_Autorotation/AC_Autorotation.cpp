@@ -158,7 +158,7 @@ AC_Autorotation::AC_Autorotation(AP_MotorsHeli*& motors, AC_AttitudeControl*& at
     _pos_control(pos_ctrl)
     {
     #if AP_RANGEFINDER_ENABLED
-        _ground_surface = new AP_SurfaceDistance(ROTATION_PITCH_270, 2U); // taking the 3rd instance of SurfaceDistance to not conflict with the first two already in copter
+        _ground_surface = new AP_SurfaceDistance(ROTATION_PITCH_270, 2U, &_ground_surface_params); // taking the 3rd instance of SurfaceDistance to not conflict with the first two already in copter
     #endif
         AP_Param::setup_object_defaults(this, var_info);
     }
@@ -198,10 +198,10 @@ void AC_Autorotation::init(void)
     _param_head_speed_set_point.set(MAX(_param_head_speed_set_point, 500.0));
 
     // Set limits and initialise NE pos controller
-    _pos_control->set_max_speed_accel_NE_cm(_param_target_speed_ms.get()*100.0, _param_accel_max_mss.get()*100.0);
-    _pos_control->set_correction_speed_accel_NE_cm(_param_target_speed_ms.get()*100.0, _param_accel_max_mss.get()*100.0);
-    _pos_control->set_pos_error_max_NE_m(10);
-    _pos_control->init_NE_controller();
+    _pos_control->NE_set_max_speed_accel_cm(_param_target_speed_ms.get()*100.0, _param_accel_max_mss.get()*100.0);
+    _pos_control->NE_set_correction_speed_accel_cm(_param_target_speed_ms.get()*100.0, _param_accel_max_mss.get()*100.0);
+    _pos_control->NE_set_pos_error_max_m(10);
+    _pos_control->NE_init_controller();
 
     // Reset the landed reason
     _landed_reason.min_speed = false;
@@ -530,6 +530,7 @@ void AC_Autorotation::update_navigation_controller(float pilot_norm_accel)
     AC_AttitudeControl::HeadingCommand desired_heading;
     desired_heading.heading_mode = AC_AttitudeControl::HeadingMode::Rate_Only;
     desired_heading.yaw_rate_rads = 0.0;
+    desired_heading.yaw_angle_rad = 0.0f;
 
 
     // Check with motors that we have not saturated
@@ -651,7 +652,7 @@ void AC_Autorotation::update_navigation_controller(float pilot_norm_accel)
 
     // Update the position controller
     _pos_control->input_vel_accel_NE_cm(desired_velocity_NE_cm, desired_accel_NE_cm, true);
-    _pos_control->update_NE_controller();
+    _pos_control->NE_update_controller();
 
     // Output to the attitude controller
     _attitude_control->input_thrust_vector_heading_rad(_pos_control->get_thrust_vector(),
@@ -868,13 +869,14 @@ void AC_Autorotation::run_landed(void)
     Vector2f desired_velocity_NE_cm;
     Vector2f desired_accel_NE_cm;
     _pos_control->input_vel_accel_NE_cm(desired_velocity_NE_cm, desired_accel_NE_cm, true);
-    _pos_control->soften_for_landing_NE();
-    _pos_control->update_NE_controller();
+    _pos_control->NE_soften_for_landing();
+    _pos_control->NE_update_controller();
 
     // Output to the attitude controller
     AC_AttitudeControl::HeadingCommand desired_heading;
     desired_heading.heading_mode = AC_AttitudeControl::HeadingMode::Rate_Only;
     desired_heading.yaw_rate_rads = 0.0;
+    desired_heading.yaw_angle_rad = 0.0f;
     _attitude_control->input_thrust_vector_heading_rad(_pos_control->get_thrust_vector(),
                                                        desired_heading.yaw_angle_rad,
                                                        desired_heading.yaw_rate_rads);
