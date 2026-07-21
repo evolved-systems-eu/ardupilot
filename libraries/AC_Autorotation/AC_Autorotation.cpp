@@ -530,6 +530,7 @@ void AC_Autorotation::update_navigation_controller(float pilot_norm_accel)
     AC_AttitudeControl::HeadingCommand desired_heading;
     desired_heading.heading_mode = AC_AttitudeControl::HeadingMode::Rate_Only;
     desired_heading.yaw_rate_rads = 0.0;
+    desired_heading.yaw_angle_rad = 0.0f;
 
 
     // Check with motors that we have not saturated
@@ -875,6 +876,7 @@ void AC_Autorotation::run_landed(void)
     AC_AttitudeControl::HeadingCommand desired_heading;
     desired_heading.heading_mode = AC_AttitudeControl::HeadingMode::Rate_Only;
     desired_heading.yaw_rate_rads = 0.0;
+    desired_heading.yaw_angle_rad = 0.0f;
     _attitude_control->input_thrust_vector_heading_rad(_pos_control->get_thrust_vector(),
                                                        desired_heading.yaw_angle_rad,
                                                        desired_heading.yaw_rate_rads);
